@@ -36,7 +36,7 @@ steps:
     scheme: 'AzureWithYml19Mart'
     xcodeVersion: 'default'
     packageApp: true
-    signingOption: 'manual'
+
    
 
 
