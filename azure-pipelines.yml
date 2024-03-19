@@ -1,0 +1,77 @@
+variables:
+- group: MobileAppsVariableGroup
+
+trigger:
+  branches:
+    include:
+    - master
+    - main
+    - develop
+
+schedules:
+  - cron: "0 0 * * *"
+    displayName: Daily midnight build
+    branches:
+      include:
+      - master
+      - main
+      - develop
+    always: true
+
+pool:
+  name: 'Default'
+
+steps:
+- checkout: self
+
+- task: InstallAppleCertificate@2
+  displayName: 'iOS Apple certificate installation'
+  inputs:
+    certSecureFile: 'distribution.p12'
+    certPwd: '$(p12Password)'
+    opensslPkcsArgs: '-legacy'
+
+- task: InstallAppleProvisioningProfile@1
+  displayName: 'iOS Apple provisioning profile installation'
+  inputs:
+    provisioningProfileLocation: 'secureFiles'
+    provProfileSecureFile: 'adhoc.mobileprovision'
+
+- task: Xcode@5
+  displayName: 'iOS Xcode build'
+  inputs:
+    actions: 'clean build'
+    configuration: 'Release'
+    sdk: 'iphoneos'
+    xcWorkspacePath: '**/*.xcodeproj'
+    scheme: 'AzureWithYml19Mart'
+    xcodeVersion: 'default'
+    packageApp: true
+    signingOption: 'manual'
+    signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
+    provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
+
+- task: CopyFiles@2
+  displayName: 'iOS copy ipa file to upload'
+  inputs:
+    SourceFolder: '$(system.defaultworkingdirectory)'
+    Contents: '**/*.ipa'
+    TargetFolder: '$(build.artifactStagingDirectory)'
+    OverWrite: true
+    flattenFolders: true
+  condition: succeededOrFailed()
+
+- task: PublishBuildArtifacts@1
+  displayName: 'iOS publish ipa to artifacts'
+  inputs:
+    PathtoPublish: '$(build.artifactStagingDirectory)'
+  condition: succeededOrFailed()
+
+#- task: ms-vsclient.app-store.app-store-release.AppStoreRelease@1
+#  displayName: 'Publish to the App Store TestFlight track'
+#  inputs:
+#    serviceEndpoint: 'App Store Connect'
+#    appIdentifier: com.ergene.AzureOrnek
+#    shouldSkipWaitingForProcessing: true
+#    shouldSkipSubmission: true
+#
