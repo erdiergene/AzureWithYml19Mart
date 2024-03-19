@@ -51,12 +51,4 @@ steps:
     packageApp: true
     archivePath: '$(Build.ArtifactStagingDirectory)/$(buildScheme).xcarchive'
 
-- task: Xcode@5
-  inputs:
-    actions: 'export'
-    sdk: $(buildSdk)
-    xcWorkspacePath: $(workspacePath)
-    xcodeVersion: $(xcodeVer)
-    exportOptionsPlist: 'path/to/your/exportOptions.plist'
-    archivePath: '$(Build.ArtifactStagingDirectory)/$(buildScheme).xcarchive'
-    exportPath: '$(Build.ArtifactStagingDirectory)/ipa'
+
