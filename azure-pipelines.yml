@@ -1,4 +1,10 @@
 
+variables:
+  buildScheme: 'AzureWithYml19Mart'  # Uygulamanızın Xcode scheme'ini buraya girin.
+  buildSdk: 'iphoneos'
+  buildConfiguration: 'Release'
+  workspacePath: '**/*.xcodeproj'  # Eğer bir workspace kullanıyorsanız, burayı ayarlayın.
+  xcodeVer: 'default'  # Seçenekler: 8, 9, 10, 11, 12, default, specifyPath
 
 trigger:
   branches:
@@ -25,27 +31,32 @@ steps:
 
 
 
+- task: Xcode@5
+  inputs:
+    actions: 'build'
+    scheme: $(buildScheme)
+    sdk: $(buildSdk)
+    configuration: $(buildConfiguration)
+    xcWorkspacePath: $(workspacePath)
+    xcodeVersion: $(xcodeVer)
 
 - task: Xcode@5
-  displayName: 'iOS Xcode build'
   inputs:
-    actions: 'clean build'
-    configuration: 'Release'
-    sdk: 'iphoneos'
-    xcWorkspacePath: '**/*.xcodeproj'
-    scheme: 'AzureWithYml19Mart'
-    xcodeVersion: 'default'
+    actions: 'archive'
+    scheme: $(buildScheme)
+    sdk: $(buildSdk)
+    configuration: $(buildConfiguration)
+    xcWorkspacePath: $(workspacePath)
+    xcodeVersion: $(xcodeVer)
     packageApp: true
-    signingOption: 'false'
-   
+    archivePath: '$(Build.ArtifactStagingDirectory)/$(buildScheme).xcarchive'
 
-
-
-#- task: ms-vsclient.app-store.app-store-release.AppStoreRelease@1
-#  displayName: 'Publish to the App Store TestFlight track'
-#  inputs:
-#    serviceEndpoint: 'App Store Connect'
-#    appIdentifier: com.ergene.AzureOrnek
-#    shouldSkipWaitingForProcessing: true
-#    shouldSkipSubmission: true
-#
+- task: Xcode@5
+  inputs:
+    actions: 'export'
+    sdk: $(buildSdk)
+    xcWorkspacePath: $(workspacePath)
+    xcodeVersion: $(xcodeVer)
+    exportOptionsPlist: 'path/to/your/exportOptions.plist'
+    archivePath: '$(Build.ArtifactStagingDirectory)/$(buildScheme).xcarchive'
+    exportPath: '$(Build.ArtifactStagingDirectory)/ipa'
